@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Resultados</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body>
+
+<div class="contenedor">
+
+    <h1>Resultados</h1>
+
+
+    <div class="tarjeta">
+
+        <h2>Total</h2>
+
+        <p class="numero">
+            {{ total }}
+        </p>
+
+    </div>
+
+
+    <div class="tarjeta">
+
+        <h2>Registros</h2>
+
+        <p class="numero">
+            {{ registros }}
+        </p>
+
+    </div>
+
+
+    {% if fecha_minima %}
+
+        <div class="tarjeta">
+
+            <h2>Período</h2>
+
+            <p>
+                {{ fecha_minima }}
+                →
+                {{ fecha_maxima }}
+            </p>
+
+        </div>
+
+    {% endif %}
+
+
+    {% if categorias %}
+
+        <h2>Por categoría</h2>
+
+        <table>
+
+            <tr>
+                <th>Categoría</th>
+                <th>Cantidad</th>
+            </tr>
+
+            {% for categoria in categorias %}
+
+                <tr>
+
+                    <td>
+                        {{ categoria.nombre }}
+                    </td>
+
+                    <td>
+                        {{ categoria.cantidad }}
+                    </td>
+
+                </tr>
+
+            {% endfor %}
+
+        </table>
+
+    {% endif %}
+
+
+    {% if destinos %}
+
+        <h2>Por destino</h2>
+
+        <table>
+
+            <tr>
+                <th>Destino</th>
+                <th>Cantidad</th>
+            </tr>
+
+            {% for destino in destinos %}
+
+                <tr>
+
+                    <td>
+                        {{ destino.nombre }}
+                    </td>
+
+                    <td>
+                        {{ destino.cantidad }}
+                    </td>
+
+                </tr>
+
+            {% endfor %}
+
+        </table>
+
+    {% endif %}
+
+
+    <br>
+
+    <a href="/">
+        Analizar otra planilla
+    </a>
+
+</div>
+
+</body>
+
+</html>

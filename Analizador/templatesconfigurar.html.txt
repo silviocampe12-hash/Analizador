@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Configurar datos</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body>
+
+<div class="contenedor">
+
+    <h1>Configurar planilla</h1>
+
+    <p>
+        Se encontraron {{ cantidad_filas }} registros.
+    </p>
+
+    <form action="/analizar" method="POST">
+
+        <input
+            type="hidden"
+            name="archivo"
+            value="{{ archivo }}"
+        >
+
+        <label>Columna de fecha</label>
+
+        <select name="fecha">
+
+            <option value="">
+                No utilizar
+            </option>
+
+            {% for columna in columnas %}
+
+                <option value="{{ columna }}">
+                    {{ columna }}
+                </option>
+
+            {% endfor %}
+
+        </select>
+
+
+        <label>Columna de categoría / material</label>
+
+        <select name="categoria">
+
+            <option value="">
+                No utilizar
+            </option>
+
+            {% for columna in columnas %}
+
+                <option value="{{ columna }}">
+                    {{ columna }}
+                </option>
+
+            {% endfor %}
+
+        </select>
+
+
+        <label>Columna de cantidad</label>
+
+        <select name="cantidad">
+
+            <option value="">
+                No utilizar
+            </option>
+
+            {% for columna in columnas %}
+
+                <option value="{{ columna }}">
+                    {{ columna }}
+                </option>
+
+            {% endfor %}
+
+        </select>
+
+
+        <label>Columna de unidad</label>
+
+        <select name="unidad">
+
+            <option value="">
+                No utilizar
+            </option>
+
+            {% for columna in columnas %}
+
+                <option value="{{ columna }}">
+                    {{ columna }}
+                </option>
+
+            {% endfor %}
+
+        </select>
+
+
+        <label>Columna de destino</label>
+
+        <select name="destino">
+
+            <option value="">
+                No utilizar
+            </option>
+
+            {% for columna in columnas %}
+
+                <option value="{{ columna }}">
+                    {{ columna }}
+                </option>
+
+            {% endfor %}
+
+        </select>
+
+
+        <br>
+
+        <button type="submit">
+            Calcular
+        </button>
+
+    </form>
+
+</div>
+
+</body>
+
+</html>

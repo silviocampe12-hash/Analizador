@@ -1,0 +1,200 @@
+from flask import Flask, render_template, request, redirect, url_for
+import pandas as pd
+import os
+import uuid
+
+
+app = Flask(__name__)
+
+CARPETA_UPLOADS = "uploads"
+
+os.makedirs(CARPETA_UPLOADS, exist_ok=True)
+
+
+@app.route("/")
+def inicio():
+    return render_template("index.html")
+
+
+@app.route("/subir", methods=["POST"])
+def subir_archivo():
+
+    archivo = request.files.get("archivo")
+
+    if archivo is None or archivo.filename == "":
+        return "No se seleccionó ningún archivo."
+
+    extension = archivo.filename.lower().split(".")[-1]
+
+    if extension not in ["xlsx", "xls", "csv"]:
+        return "Formato no permitido. Usá XLSX, XLS o CSV."
+
+    nombre_seguro = str(uuid.uuid4()) + "." + extension
+
+    ruta = os.path.join(CARPETA_UPLOADS, nombre_seguro)
+
+    archivo.save(ruta)
+
+    try:
+
+        if extension == "csv":
+            df = pd.read_csv(ruta)
+        else:
+            df = pd.read_excel(ruta)
+
+    except Exception as error:
+        return f"No se pudo leer el archivo: {error}"
+
+    columnas = list(df.columns)
+
+    columnas = [str(columna) for columna in columnas]
+
+    return render_template(
+        "configurar.html",
+        columnas=columnas,
+        archivo=nombre_seguro,
+        cantidad_filas=len(df)
+    )
+
+
+@app.route("/analizar", methods=["POST"])
+def analizar():
+
+    archivo = request.form.get("archivo")
+
+    columna_fecha = request.form.get("fecha")
+    columna_categoria = request.form.get("categoria")
+    columna_cantidad = request.form.get("cantidad")
+    columna_unidad = request.form.get("unidad")
+    columna_destino = request.form.get("destino")
+
+    ruta = os.path.join(CARPETA_UPLOADS, archivo)
+
+    extension = archivo.lower().split(".")[-1]
+
+    try:
+
+        if extension == "csv":
+            df = pd.read_csv(ruta)
+        else:
+            df = pd.read_excel(ruta)
+
+    except Exception as error:
+        return f"No se pudo leer nuevamente el archivo: {error}"
+
+    # Convertimos nombres de columnas a texto
+    df.columns = [str(columna) for columna in df.columns]
+
+    # -----------------------------
+    # FECHA
+    # -----------------------------
+
+    if columna_fecha:
+        df[columna_fecha] = pd.to_datetime(
+            df[columna_fecha],
+            errors="coerce"
+        )
+
+    # -----------------------------
+    # CANTIDAD
+    # -----------------------------
+
+    if columna_cantidad:
+
+        df[columna_cantidad] = (
+            df[columna_cantidad]
+            .astype(str)
+            .str.replace(",", ".", regex=False)
+        )
+
+        df[columna_cantidad] = pd.to_numeric(
+            df[columna_cantidad],
+            errors="coerce"
+        )
+
+    # -----------------------------
+    # TOTAL
+    # -----------------------------
+
+    total = 0
+
+    if columna_cantidad:
+        total = df[columna_cantidad].sum()
+
+    # -----------------------------
+    # CANTIDAD DE REGISTROS
+    # -----------------------------
+
+    registros = len(df)
+
+    # -----------------------------
+    # AGRUPACIÓN POR CATEGORÍA
+    # -----------------------------
+
+    categorias = []
+
+    if columna_categoria and columna_cantidad:
+
+        agrupado = (
+            df.groupby(columna_categoria)[columna_cantidad]
+            .sum()
+            .sort_values(ascending=False)
+        )
+
+        for nombre, cantidad in agrupado.items():
+
+            categorias.append({
+                "nombre": nombre,
+                "cantidad": cantidad
+            })
+
+    # -----------------------------
+    # AGRUPACIÓN POR DESTINO
+    # -----------------------------
+
+    destinos = []
+
+    if columna_destino and columna_cantidad:
+
+        agrupado_destinos = (
+            df.groupby(columna_destino)[columna_cantidad]
+            .sum()
+            .sort_values(ascending=False)
+        )
+
+        for nombre, cantidad in agrupado_destinos.items():
+
+            destinos.append({
+                "nombre": nombre,
+                "cantidad": cantidad
+            })
+
+    # -----------------------------
+    # PERÍODO
+    # -----------------------------
+
+    fecha_minima = None
+    fecha_maxima = None
+
+    if columna_fecha:
+
+        fechas_validas = df[columna_fecha].dropna()
+
+        if not fechas_validas.empty:
+
+            fecha_minima = fechas_validas.min().strftime("%d/%m/%Y")
+            fecha_maxima = fechas_validas.max().strftime("%d/%m/%Y")
+
+    return render_template(
+        "resultados.html",
+        total=round(total, 2),
+        registros=registros,
+        categorias=categorias,
+        destinos=destinos,
+        fecha_minima=fecha_minima,
+        fecha_maxima=fecha_maxima
+    )
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
